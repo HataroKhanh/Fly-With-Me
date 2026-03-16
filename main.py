@@ -2,16 +2,23 @@ import pygame
 import random
 
 pygame.init()
+pygame.mixer.init()
+
+# Load sounds
+laser_sound = pygame.mixer.Sound('Sound/laserShoot.wav')
+explosion_sound = pygame.mixer.Sound('Sound/explosion.wav')
+pygame.mixer.music.load('Sound/game.mp3')
+pygame.mixer.music.play(-1)
 
 screen_width, screen_height = 1280 // 2, 720 // 2
 screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Fly With Me =)")
-pygame.display.set_icon(pygame.image.load('icon.ico'))
+pygame.display.set_icon(pygame.image.load('assets/icon.ico'))
 
 clock = pygame.time.Clock()
 cooldown_tracker = 0
 
-bg = pygame.image.load(r'bg.png')
+bg = pygame.image.load(r'assets/bg.png')
 bg = pygame.transform.scale(bg, (1280 // 2, 720 // 2))
 
 font_size = 36
@@ -26,7 +33,7 @@ class Monster:
     def __init__(self):
         self.x = random.randint(700, 5000)
         self.y = random.randint(1, 300)
-        self.monster = pygame.image.load("monster.png")
+        self.monster = pygame.image.load("assets/monster.png")
         self.monster_rect = self.monster.get_rect()
         self.monster_rect.x = self.x
         self.monster_rect.y = self.y
@@ -66,7 +73,7 @@ class Dan:
 
 class Player:
     def __init__(self):
-        self.playerimg = pygame.image.load(r'player.png')
+        self.playerimg = pygame.image.load(r'assets/player.png')
         self.player_rect = pygame.Rect(10,10,40,40)
         self.player_rect.x = self.player_rect.x
         self.player_rect.y = self.player_rect.y
@@ -86,6 +93,7 @@ class Player:
         if cooldown_tracker == 0:
             bullet = Dan(self.player_rect.x, self.player_rect.y)
             bullets.append(bullet)
+            laser_sound.play()
             
     def move(self, keys):
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
@@ -132,22 +140,24 @@ while running:
     keys = pygame.key.get_pressed()
     player.move(keys)
     player.check_screen(check_game_over)
-    for monster in monsters:
+    for monster in monsters[:]:
         monster.draw()
         monster.update_pos_x_monster()
         monster.Check_screen()
         if monster.monster_rect.colliderect(player.player_rect):
             check_game_over = True
+            explosion_sound.play()
         if monster.Check_screen():
             monsters.remove(monster)
 
-    for bullet in bullets:
+    for bullet in bullets[:]:
         bullet.update_pos_x_dan()
         bullet.draw()
         if bullet.check_pos_to_del():
             bullets.remove(bullet)
-        if bullet.check_collision(monsters):
+        elif bullet.check_collision(monsters):
             bullets.remove(bullet)
+            explosion_sound.play()
             text = ''
             score += 1
             text += str(score)
